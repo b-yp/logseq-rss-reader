@@ -10,4 +10,12 @@ export default defineConfig({
     target: "esnext",
     minify: "esbuild",
   },
+  resolve: {
+    alias: {
+      process: "process/browser",
+      stream: "stream-browserify",
+      zlib: "browserify-zlib",
+      util: 'util'
+    }
+  },
 });
