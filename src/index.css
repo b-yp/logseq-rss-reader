@@ -9,3 +9,9 @@
   align-items: center;
   justify-content: center;
 }
+
+.logseq-rss-reader-plugin-main > .rss-reader-main {
+  padding-top: 50px;
+  width: 100%;
+  height: 100%;
+}
