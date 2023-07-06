@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import Parser from "rss-parser";
+import { getLinkPreview } from "link-preview-js";
 
 import { styled, useTheme, Theme, CSSObject } from "@mui/material/styles";
 import Box from "@mui/material/Box";
@@ -16,15 +17,22 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
-import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
+import ListItemAvatar from "@mui/material/ListItemAvatar";
 import Button from "@mui/material/Button";
-import InboxIcon from "@mui/icons-material/MoveToInbox";
-import MailIcon from "@mui/icons-material/Mail";
+import Avatar from "@mui/material/Avatar";
+import Tooltip from "@mui/material/Tooltip";
 
-import { useAppVisible } from "./utils";
+import { extractURL, useAppVisible } from "./utils";
+import { RssOption } from "./types";
 
 import "./index.css";
+
+const rssList = [
+  "http://www.ruanyifeng.com/blog/atom.xml",
+  "https://www.reddit.com/.rss",
+  "https://sspai.com/feed",
+];
 
 const drawerWidth = 240;
 
@@ -102,19 +110,42 @@ function App() {
   const visible = useAppVisible();
   const theme = useTheme();
   const parser = new Parser();
+  const [rssOptions, setRssOptions] = useState<RssOption[]>([]);
 
   const [drawerVisible, setDrawerVisible] = useState(false);
 
+  const init = async () => {
+    let rssConfigPage;
+    rssConfigPage = await logseq.Editor.getPage("rss-config");
+    if (!rssConfigPage) {
+      rssConfigPage = await logseq.Editor.createPage("rss-config");
+    }
+    if (!rssConfigPage?.uuid) return;
+    const tree = await logseq.Editor.getPageBlocksTree(rssConfigPage?.uuid);
+
+    const options = tree
+      .filter((i) => !!i.content)
+      .map((i) => ({
+        ...i.properties,
+        feedUrl: extractURL(i.content),
+      }));
+
+    setRssOptions(options as unknown as RssOption[]);
+  };
+
   useEffect(() => {
-    console.log("drawerVisible", drawerVisible);
-  }, [drawerVisible]);
+    // init()
+  }, []);
 
   const handleFetchData = async () => {
+    // const result = await getLinkPreview("https://www.reddit.com");
+    
     const res = await fetch("http://www.ruanyifeng.com/blog/atom.xml", {
       method: "GET",
       mode: "cors",
-    }).then((res) => res.text());
-    console.log("res", res);
+    }).then((res) => {
+      return res.text();
+    });
     if (!res) return;
     const feed = await parser.parseString(res);
     console.log("feed", feed);
@@ -163,6 +194,9 @@ function App() {
                 >
                   Mini variant drawer
                 </Typography>
+                <Button color="inherit" onClick={init}>
+                  Test
+                </Button>
                 <Button color="inherit" onClick={handleFetchData}>
                   Refresh
                 </Button>
@@ -183,63 +217,20 @@ function App() {
               </DrawerHeader>
               <Divider />
               <List>
-                {["Inbox", "Starred", "Send email", "Drafts"].map(
-                  (text, index) => (
-                    <ListItem
-                      key={text}
-                      disablePadding
-                      sx={{ display: "block" }}
-                    >
-                      <ListItemButton
-                        sx={{
-                          minHeight: 48,
-                          justifyContent: drawerVisible ? "initial" : "center",
-                          px: 2.5,
-                        }}
-                      >
-                        <ListItemIcon
-                          sx={{
-                            minWidth: 0,
-                            mr: drawerVisible ? 3 : "auto",
-                            justifyContent: "center",
-                          }}
-                        >
-                          {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={text}
-                          sx={{ opacity: drawerVisible ? 1 : 0 }}
-                        />
+                {rssOptions.map((rss) => (
+                  <ListItem
+                    key={rss.url}
+                    disablePadding
+                    sx={{ display: "block" }}
+                  >
+                    <Tooltip title={rss.feedUrl}>
+                      <ListItemButton>
+                        <ListItemAvatar>
+                          <Avatar src={rss.favicons?.[0]} />
+                        </ListItemAvatar>
+                        <ListItemText>{rss.title}</ListItemText>
                       </ListItemButton>
-                    </ListItem>
-                  )
-                )}
-              </List>
-              <Divider />
-              <List>
-                {["All mail", "Trash", "Spam"].map((text, index) => (
-                  <ListItem key={text} disablePadding sx={{ display: "block" }}>
-                    <ListItemButton
-                      sx={{
-                        minHeight: 48,
-                        justifyContent: drawerVisible ? "initial" : "center",
-                        px: 2.5,
-                      }}
-                    >
-                      <ListItemIcon
-                        sx={{
-                          minWidth: 0,
-                          mr: drawerVisible ? 3 : "auto",
-                          justifyContent: "center",
-                        }}
-                      >
-                        {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={text}
-                        sx={{ opacity: drawerVisible ? 1 : 0 }}
-                      />
-                    </ListItemButton>
+                    </Tooltip>
                   </ListItem>
                 ))}
               </List>

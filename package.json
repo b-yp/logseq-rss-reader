@@ -17,6 +17,7 @@
     "@mui/styled-engine-sc": "^5.12.0",
     "buffer": "^6.0.3",
     "events": "^3.3.0",
+    "link-preview-js": "^3.0.4",
     "process": "^0.11.10",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

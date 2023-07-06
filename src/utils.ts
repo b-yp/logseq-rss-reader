@@ -27,3 +27,24 @@ export const genRandomStr = () => Math.random().
   toString(36).
   replace(/[^a-z]+/g, '').
   substring(0, 5)
+
+export const extractBaseURL = (url: string): string | null => {
+  const pattern = /(https?:\/\/[^/]+)\/?/;
+  const match = url.match(pattern);
+  if (match) {
+    return match[1];
+  } else {
+    return null;
+  }
+}
+
+export const extractURL = (input: string): string | null => {
+  const regex = /(http[s]?:\/\/[^\n\s]+)/g;
+  const matches = input.match(regex);
+
+  if (matches && matches.length > 0) {
+    return matches[0];
+  }
+
+  return null;
+}
