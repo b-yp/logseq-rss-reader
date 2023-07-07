@@ -5,6 +5,7 @@ specifiers:
   '@emotion/styled': ^11.11.0
   '@logseq/libs': ^0.0.14
   '@mui/icons-material': ^5.13.7
+  '@mui/lab': 5.0.0-alpha.135
   '@mui/material': ^5.13.7
   '@mui/styled-engine-sc': ^5.12.0
   '@semantic-release/changelog': 6.0.3
@@ -43,6 +44,7 @@ dependencies:
   '@emotion/styled': 11.11.0_o33mozmalvjck4xgd65gutvo34
   '@logseq/libs': 0.0.14
   '@mui/icons-material': 5.13.7_3i265pi6twd5jhoujtrgqwzn4e
+  '@mui/lab': 5.0.0-alpha.135_7ajcxxe7ls3osz5rfs4jaz44nu
   '@mui/material': 5.13.7_a546lfksfblnum6xd2xu2d7sbu
   '@mui/styled-engine-sc': 5.12.0_styled-components@6.0.2
   buffer: 6.0.3
@@ -1932,6 +1934,40 @@ packages:
       '@mui/material': 5.13.7_a546lfksfblnum6xd2xu2d7sbu
       '@types/react': 18.2.6
       react: 18.2.0
+    dev: false
+
+  /@mui/lab/5.0.0-alpha.135_7ajcxxe7ls3osz5rfs4jaz44nu:
+    resolution: {integrity: sha512-l/Yus4dGZbwm51GXpepgSmvlVxrK3CNUxPamEocqdhFkh0U/8QlfyOqeRGPXGLvxpj+efABXT0yZTapwbZBjcg==}
+    engines: {node: '>=12.0.0'}
+    peerDependencies:
+      '@emotion/react': ^11.5.0
+      '@emotion/styled': ^11.3.0
+      '@mui/material': ^5.0.0
+      '@types/react': ^17.0.0 || ^18.0.0
+      react: ^17.0.0 || ^18.0.0
+      react-dom: ^17.0.0 || ^18.0.0
+    peerDependenciesMeta:
+      '@emotion/react':
+        optional: true
+      '@emotion/styled':
+        optional: true
+      '@types/react':
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.22.6
+      '@emotion/react': 11.11.1_s3k22s5ab4eu26xuel7hiaraxy
+      '@emotion/styled': 11.11.0_o33mozmalvjck4xgd65gutvo34
+      '@mui/base': 5.0.0-beta.6_tqcjxml4rosq5qpg5cznikfcd4
+      '@mui/material': 5.13.7_a546lfksfblnum6xd2xu2d7sbu
+      '@mui/system': 5.13.7_7xanygpjglmkk5mbdoxbm2oy5q
+      '@mui/types': 7.2.4_@types+react@18.2.6
+      '@mui/utils': 5.13.7_react@18.2.0
+      '@types/react': 18.2.6
+      clsx: 1.2.1
+      prop-types: 15.8.1
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      react-is: 18.2.0
     dev: false
 
   /@mui/material/5.13.7_a546lfksfblnum6xd2xu2d7sbu:

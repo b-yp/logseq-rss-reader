@@ -33,11 +33,14 @@ import MenuIcon from "@mui/icons-material/Menu";
 import Zoom from "@mui/material/Zoom";
 import AddIcon from "@mui/icons-material/Add";
 
+import LoadingButton from "@mui/lab/LoadingButton";
+
 import Message from "./components/Message";
 import {
   extractBaseURL,
   extractURL,
   formatObject,
+  parseObjectValue,
   useAppVisible,
 } from "./utils";
 import { RssOption } from "./types";
@@ -131,6 +134,7 @@ function App() {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [dialogVisible, setDialogVisible] = useState(false);
   const [currntRssUrl, setCurrntRssUrl] = useState("");
+  const [loading, setLoading] = useState(false);
   const [messageInfo, setMessageInfo] = useState<{
     open: boolean;
     type: "success" | "info" | "warning" | "error";
@@ -159,7 +163,7 @@ function App() {
     const options = tree
       .filter((i) => !!i.content)
       .map((i) => ({
-        ...i.properties,
+        ...parseObjectValue(i.properties),
         feedUrl: extractURL(i.content),
       }));
 
@@ -187,6 +191,7 @@ function App() {
   };
 
   const handleAddFeed = async () => {
+    setLoading(true);
     try {
       const baseUrl = extractBaseURL(currntRssUrl);
       if (!baseUrl) return;
@@ -203,9 +208,11 @@ function App() {
         });
         init();
         setDialogVisible(false);
+        setLoading(false);
       }
     } catch (e: any) {
       setMessageInfo({ open: true, type: "error", value: e?.message || e });
+      setLoading(false);
     }
   };
 
@@ -376,9 +383,13 @@ function App() {
             </DialogContent>
             <DialogActions>
               <Button onClick={() => setDialogVisible(false)}>Cancel</Button>
-              <Button disabled={!currntRssUrl} onClick={handleAddFeed}>
+              <LoadingButton
+                disabled={!currntRssUrl}
+                loading={loading}
+                onClick={handleAddFeed}
+              >
                 Add
-              </Button>
+              </LoadingButton>
             </DialogActions>
           </Dialog>
           {messageInfo.open && (

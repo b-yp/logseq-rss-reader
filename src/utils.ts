@@ -52,9 +52,24 @@ export const extractURL = (input: string): string | null => {
 export const formatObject = (object: { [key: string]: any }) => {
   const obj: any = {}
   for (const i in object) {
-    if (object[i]) {
-      obj[i] = typeof object[i] === 'string' ? object[i] : object[i][0]
+    const value = typeof object[i] === 'string' ? object[i] : object[i]?.[0]
+    if (value) {
+      obj[i] = `\`${value}\``
     }
   }
+  return obj
+}
+
+export const parseObjectValue = (object?: { [key: string]: string }) => {
+  if (!object) {
+    return ({})
+  }
+  const obj: any = {}
+  for (const i in object) {
+    if (object[i]) {
+      obj[i] = object[i].replace(/`(.*)`/, "$1");
+    }
+  }
+  console.log('ob', obj)
   return obj
 }
