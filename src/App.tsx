@@ -26,6 +26,8 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import FormHelperText from "@mui/material/FormHelperText";
+import Backdrop from "@mui/material/Backdrop";
+import CircularProgress from "@mui/material/CircularProgress";
 
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -52,6 +54,13 @@ const rssList = [
   "http://www.ruanyifeng.com/blog/atom.xml",
   "https://www.reddit.com/.rss",
   "https://sspai.com/feed",
+  "http://feed.appinn.com/",
+  "https://xinquji.com/rss",
+  "https://www.woshipm.com/feed",
+  "https://www.zhangxinxu.com/wordpress/feed/",
+  "https://coolshell.cn/feed",
+  "https://liriansu.com/index.xml",
+  "https://chensy.cn/post/index.xml",
 ];
 
 const drawerWidth = 240;
@@ -145,6 +154,7 @@ function App() {
     value: "",
   });
   const [configPage, setConfigPage] = useState<PageEntity | null>(null);
+  const [feedList, setFeedList] = useState<Parser.Item[]>([]);
 
   const init = async () => {
     let rssConfigPage;
@@ -174,8 +184,9 @@ function App() {
     init();
   }, []);
 
-  const handleFetchData = async () => {
-    const res = await fetch("http://www.ruanyifeng.com/blog/atom.xml", {
+  const handleFetchData = async (url: string) => {
+    setLoading(true);
+    const res = await fetch(url, {
       method: "GET",
       mode: "cors",
     }).then((res) => {
@@ -184,6 +195,9 @@ function App() {
     if (!res) return;
     const feed = await parser.parseString(res);
     console.log("feed", feed);
+    const items = feed.items;
+    setFeedList(items);
+    setLoading(false);
   };
 
   const handleDrawerToggle = (visible: boolean) => {
@@ -229,7 +243,7 @@ function App() {
     return (
       <main className="logseq-rss-reader-plugin-main">
         <div ref={innerRef} className="rss-reader-main">
-          <Box sx={{ display: "flex" }}>
+          <Box sx={{ display: "flex", height: "100%" }}>
             <CssBaseline />
             <AppBar position="fixed" open={drawerVisible}>
               <Toolbar>
@@ -253,7 +267,10 @@ function App() {
                 >
                   Mini variant drawer
                 </Typography>
-                <Button color="inherit" onClick={handleFetchData}>
+                <Button
+                  color="inherit"
+                  onClick={() => handleFetchData(rssOptions[0].feedUrl)}
+                >
                   Refresh
                 </Button>
                 <Button color="inherit" onClick={handleClose}>
@@ -280,7 +297,9 @@ function App() {
                     sx={{ display: "block" }}
                   >
                     <Tooltip title={rss.feedUrl}>
-                      <ListItemButton>
+                      <ListItemButton
+                        onClick={() => handleFetchData(rss.feedUrl)}
+                      >
                         <ListItemAvatar>
                           <Avatar src={rss.favicons} />
                         </ListItemAvatar>
@@ -321,39 +340,33 @@ function App() {
                 </Zoom>
               </Box>
             </Drawer>
-            <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-              <DrawerHeader />
-              <Typography paragraph>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                Rhoncus dolor purus non enim praesent elementum facilisis leo
-                vel. Risus at ultrices mi tempus imperdiet. Semper risus in
-                hendrerit gravida rutrum quisque non tellus. Convallis convallis
-                tellus id interdum velit laoreet id donec ultrices. Odio morbi
-                quis commodo odio aenean sed adipiscing. Amet nisl suscipit
-                adipiscing bibendum est ultricies integer quis. Cursus euismod
-                quis viverra nibh cras. Metus vulputate eu scelerisque felis
-                imperdiet proin fermentum leo. Mauris commodo quis imperdiet
-                massa tincidunt. Cras tincidunt lobortis feugiat vivamus at
-                augue. At augue eget arcu dictum varius duis at consectetur
-                lorem. Velit sed ullamcorper morbi tincidunt. Lorem donec massa
-                sapien faucibus et molestie ac.
-              </Typography>
-              <Typography paragraph>
-                Consequat mauris nunc congue nisi vitae suscipit. Fringilla est
-                ullamcorper eget nulla facilisi etiam dignissim diam. Pulvinar
-                elementum integer enim neque volutpat ac tincidunt. Ornare
-                suspendisse sed nisi lacus sed viverra tellus. Purus sit amet
-                volutpat consequat mauris. Elementum eu facilisis sed odio
-                morbi. Euismod lacinia at quis risus sed vulputate odio. Morbi
-                tincidunt ornare massa eget egestas purus viverra accumsan in.
-                In hendrerit gravida rutrum quisque non tellus orci ac.
-                Pellentesque nec nam aliquam sem et tortor. Habitant morbi
-                tristique senectus et. Adipiscing elit duis tristique
-                sollicitudin nibh sit. Ornare aenean euismod elementum nisi quis
-                eleifend. Commodo viverra maecenas accumsan lacus vel facilisis.
-                Nulla posuere sollicitudin aliquam ultrices sagittis orci a.
-              </Typography>
+            <Box
+              component="main"
+              padding={0}
+              display="flex"
+              height="100%"
+              sx={{ flexGrow: 1 }}
+            >
+              <Box
+                component="div"
+                sx={{ width: 350, backgroundColor: "blanchedalmond" }}
+              >
+                <List sx={{ height: "100%", width: "100%", overflow: "auto" }}>
+                  {feedList.map((feed) => (
+                    <ListItem key={feed.link}>
+                      <ListItemButton>
+                        <ListItemText>{feed.title}</ListItemText>
+                      </ListItemButton>
+                    </ListItem>
+                  ))}
+                </List>
+              </Box>
+              <Box
+                component="div"
+                sx={{ flexGrow: 1, backgroundColor: "chocolate" }}
+              >
+                2
+              </Box>
             </Box>
           </Box>
           <Dialog
@@ -392,6 +405,9 @@ function App() {
               </LoadingButton>
             </DialogActions>
           </Dialog>
+          <Backdrop open={loading} style={{ zIndex: 9999 }}>
+            <CircularProgress color="primary" />
+          </Backdrop>
           {messageInfo.open && (
             <Message
               open={messageInfo.open}
