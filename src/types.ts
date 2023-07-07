@@ -21,7 +21,7 @@ export interface RssOption {
   description: string | undefined;
   mediaType: string;
   contentType: string | undefined;
-  images: string[];
+  images: string | undefined;
   videos: {
     url: string | undefined;
     secureUrl: string | null | undefined;
@@ -29,5 +29,5 @@ export interface RssOption {
     width: string | undefined;
     height: string | undefined;
   }[];
-  favicons: string[];
+  favicons: string | undefined;
 }

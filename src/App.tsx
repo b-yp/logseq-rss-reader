@@ -12,9 +12,6 @@ import CssBaseline from "@mui/material/CssBaseline";
 import Typography from "@mui/material/Typography";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
-import MenuIcon from "@mui/icons-material/Menu";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
@@ -22,11 +19,31 @@ import ListItemAvatar from "@mui/material/ListItemAvatar";
 import Button from "@mui/material/Button";
 import Avatar from "@mui/material/Avatar";
 import Tooltip from "@mui/material/Tooltip";
+import Fab from "@mui/material/Fab";
+import TextField from "@mui/material/TextField";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import FormHelperText from "@mui/material/FormHelperText";
 
-import { extractURL, useAppVisible } from "./utils";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import MenuIcon from "@mui/icons-material/Menu";
+import Zoom from "@mui/material/Zoom";
+import AddIcon from "@mui/icons-material/Add";
+
+import Message from "./components/Message";
+import {
+  extractBaseURL,
+  extractURL,
+  formatObject,
+  useAppVisible,
+} from "./utils";
 import { RssOption } from "./types";
 
 import "./index.css";
+import { PageEntity } from "@logseq/libs/dist/LSPlugin";
 
 const rssList = [
   "http://www.ruanyifeng.com/blog/atom.xml",
@@ -111,16 +128,32 @@ function App() {
   const theme = useTheme();
   const parser = new Parser();
   const [rssOptions, setRssOptions] = useState<RssOption[]>([]);
-
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [dialogVisible, setDialogVisible] = useState(false);
+  const [currntRssUrl, setCurrntRssUrl] = useState("");
+  const [messageInfo, setMessageInfo] = useState<{
+    open: boolean;
+    type: "success" | "info" | "warning" | "error";
+    value: string;
+  }>({
+    open: false,
+    type: "success",
+    value: "",
+  });
+  const [configPage, setConfigPage] = useState<PageEntity | null>(null);
 
   const init = async () => {
     let rssConfigPage;
-    rssConfigPage = await logseq.Editor.getPage("rss-config");
+    rssConfigPage = await logseq.Editor.getPage(".rss-config");
     if (!rssConfigPage) {
-      rssConfigPage = await logseq.Editor.createPage("rss-config");
+      rssConfigPage = await logseq.Editor.createPage(
+        ".rss-config",
+        {},
+        { createFirstBlock: false }
+      );
     }
     if (!rssConfigPage?.uuid) return;
+    setConfigPage(rssConfigPage);
     const tree = await logseq.Editor.getPageBlocksTree(rssConfigPage?.uuid);
 
     const options = tree
@@ -134,12 +167,10 @@ function App() {
   };
 
   useEffect(() => {
-    // init()
+    init();
   }, []);
 
   const handleFetchData = async () => {
-    // const result = await getLinkPreview("https://www.reddit.com");
-    
     const res = await fetch("http://www.ruanyifeng.com/blog/atom.xml", {
       method: "GET",
       mode: "cors",
@@ -155,20 +186,41 @@ function App() {
     setDrawerVisible(visible);
   };
 
+  const handleAddFeed = async () => {
+    try {
+      const baseUrl = extractBaseURL(currntRssUrl);
+      if (!baseUrl) return;
+      const result = await getLinkPreview(baseUrl);
+      if (result.url) {
+        if (!configPage) return;
+        await logseq.Editor.appendBlockInPage(configPage.uuid, currntRssUrl, {
+          properties: formatObject(result),
+        });
+        setMessageInfo({
+          open: true,
+          type: "success",
+          value: "Added successfully",
+        });
+        init();
+        setDialogVisible(false);
+      }
+    } catch (e: any) {
+      setMessageInfo({ open: true, type: "error", value: e?.message || e });
+    }
+  };
+
   const handleClose = () => {
     logseq.hideMainUI();
   };
 
+  const transitionDuration = {
+    enter: theme.transitions.duration.enteringScreen,
+    exit: theme.transitions.duration.leavingScreen,
+  };
+
   if (visible) {
     return (
-      <main
-        className="logseq-rss-reader-plugin-main"
-        onClick={(e) => {
-          if (!innerRef.current?.contains(e.target as any)) {
-            window.logseq.hideMainUI();
-          }
-        }}
-      >
+      <main className="logseq-rss-reader-plugin-main">
         <div ref={innerRef} className="rss-reader-main">
           <Box sx={{ display: "flex" }}>
             <CssBaseline />
@@ -194,9 +246,6 @@ function App() {
                 >
                   Mini variant drawer
                 </Typography>
-                <Button color="inherit" onClick={init}>
-                  Test
-                </Button>
                 <Button color="inherit" onClick={handleFetchData}>
                   Refresh
                 </Button>
@@ -226,7 +275,7 @@ function App() {
                     <Tooltip title={rss.feedUrl}>
                       <ListItemButton>
                         <ListItemAvatar>
-                          <Avatar src={rss.favicons?.[0]} />
+                          <Avatar src={rss.favicons} />
                         </ListItemAvatar>
                         <ListItemText>{rss.title}</ListItemText>
                       </ListItemButton>
@@ -234,6 +283,36 @@ function App() {
                   </ListItem>
                 ))}
               </List>
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: 0,
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  padding: "16px 0",
+                }}
+              >
+                <Zoom
+                  in={drawerVisible}
+                  timeout={transitionDuration}
+                  style={{
+                    transitionDelay: `${
+                      drawerVisible ? transitionDuration.exit : 0
+                    }ms`,
+                  }}
+                  unmountOnExit
+                >
+                  <Fab
+                    aria-label="add"
+                    color="primary"
+                    onClick={() => setDialogVisible(true)}
+                  >
+                    <AddIcon />
+                  </Fab>
+                </Zoom>
+              </Box>
             </Drawer>
             <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
               <DrawerHeader />
@@ -270,6 +349,45 @@ function App() {
               </Typography>
             </Box>
           </Box>
+          <Dialog
+            fullWidth
+            open={dialogVisible}
+            onClose={() => setDialogVisible(false)}
+          >
+            <DialogTitle>Add RSS</DialogTitle>
+            <DialogContent>
+              <TextField
+                autoFocus
+                margin="dense"
+                id="name"
+                label="RSS URL"
+                type="email"
+                fullWidth
+                variant="standard"
+                onChange={(e) => setCurrntRssUrl(e.target.value)}
+              />
+              <FormHelperText>
+                This URL will be added to your
+                <span style={{ color: "#333", fontWeight: 700 }}>
+                  {` .rss-config `}
+                </span>
+                page
+              </FormHelperText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setDialogVisible(false)}>Cancel</Button>
+              <Button disabled={!currntRssUrl} onClick={handleAddFeed}>
+                Add
+              </Button>
+            </DialogActions>
+          </Dialog>
+          {messageInfo.open && (
+            <Message
+              open={messageInfo.open}
+              type={messageInfo.type}
+              value={messageInfo.value}
+            />
+          )}
         </div>
       </main>
     );

@@ -48,3 +48,13 @@ export const extractURL = (input: string): string | null => {
 
   return null;
 }
+
+export const formatObject = (object: { [key: string]: any }) => {
+  const obj: any = {}
+  for (const i in object) {
+    if (object[i]) {
+      obj[i] = typeof object[i] === 'string' ? object[i] : object[i][0]
+    }
+  }
+  return obj
+}

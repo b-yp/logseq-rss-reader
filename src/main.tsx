@@ -31,9 +31,9 @@ async function main() {
 
   logseq.provideModel({
     showMainUI() {
-      logseq.showMainUI()
-    }
-  })
+      logseq.showMainUI();
+    },
+  });
 }
 
 logseq.ready(main).catch(console.error);
