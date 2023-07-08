@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Parser from "rss-parser";
 import { getLinkPreview } from "link-preview-js";
+import parse from "html-react-parser";
 
 import { styled, useTheme, Theme, CSSObject } from "@mui/material/styles";
 import Box from "@mui/material/Box";
@@ -155,13 +156,14 @@ function App() {
   });
   const [configPage, setConfigPage] = useState<PageEntity | null>(null);
   const [feedList, setFeedList] = useState<Parser.Item[]>([]);
+  const [currentFeed, setCurrentFeed] = useState<Parser.Item | null>(null);
 
   const init = async () => {
     let rssConfigPage;
-    rssConfigPage = await logseq.Editor.getPage(".rss-config");
+    rssConfigPage = await logseq.Editor.getPage("rss-config");
     if (!rssConfigPage) {
       rssConfigPage = await logseq.Editor.createPage(
-        ".rss-config",
+        "rss-config",
         {},
         { createFirstBlock: false }
       );
@@ -183,6 +185,20 @@ function App() {
   useEffect(() => {
     init();
   }, []);
+
+  useEffect(() => {
+    if (rssOptions.length > 0) {
+      const feedUrl = rssOptions[0].feedUrl;
+      handleFetchData(feedUrl);
+      setCurrntRssUrl(feedUrl);
+    }
+  }, [rssOptions]);
+
+  useEffect(() => {
+    if (feedList.length > 0) {
+      setCurrentFeed(feedList[0]);
+    }
+  }, [feedList]);
 
   const handleFetchData = async (url: string) => {
     setLoading(true);
@@ -265,7 +281,7 @@ function App() {
                   component="div"
                   sx={{ flexGrow: 1 }}
                 >
-                  Mini variant drawer
+                  {rssOptions.find((i) => i.feedUrl === currntRssUrl)?.title}
                 </Typography>
                 <Button
                   color="inherit"
@@ -295,10 +311,15 @@ function App() {
                     key={rss.url}
                     disablePadding
                     sx={{ display: "block" }}
+                    aria-selected
                   >
                     <Tooltip title={rss.feedUrl}>
                       <ListItemButton
-                        onClick={() => handleFetchData(rss.feedUrl)}
+                        selected={rss.feedUrl === currntRssUrl}
+                        onClick={() => {
+                          setCurrntRssUrl(rss.feedUrl);
+                          handleFetchData(rss.feedUrl);
+                        }}
                       >
                         <ListItemAvatar>
                           <Avatar src={rss.favicons} />
@@ -353,8 +374,11 @@ function App() {
               >
                 <List sx={{ height: "100%", width: "100%", overflow: "auto" }}>
                   {feedList.map((feed) => (
-                    <ListItem key={feed.link}>
-                      <ListItemButton>
+                    <ListItem disablePadding key={feed.link}>
+                      <ListItemButton
+                        selected={feed.link === currentFeed?.link}
+                        onClick={() => setCurrentFeed(feed)}
+                      >
                         <ListItemText>{feed.title}</ListItemText>
                       </ListItemButton>
                     </ListItem>
@@ -363,9 +387,18 @@ function App() {
               </Box>
               <Box
                 component="div"
-                sx={{ flexGrow: 1, backgroundColor: "chocolate" }}
+                style={{}}
+                sx={{
+                  flex: 1,
+                  backgroundColor: "chocolate",
+                  height: "100%",
+                  overflow: "auto",
+                  py: 5,
+                  px: 3,
+                }}
               >
-                2
+                {/* TODO: 搞一个空内容展示 */}
+                <div>{parse(currentFeed?.content || "")}</div>
               </Box>
             </Box>
           </Box>
@@ -389,7 +422,7 @@ function App() {
               <FormHelperText>
                 This URL will be added to your
                 <span style={{ color: "#333", fontWeight: 700 }}>
-                  {` .rss-config `}
+                  {` rss-config `}
                 </span>
                 page
               </FormHelperText>

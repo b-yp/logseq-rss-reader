@@ -70,6 +70,5 @@ export const parseObjectValue = (object?: { [key: string]: string }) => {
       obj[i] = object[i].replace(/`(.*)`/, "$1");
     }
   }
-  console.log('ob', obj)
   return obj
 }
