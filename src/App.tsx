@@ -29,6 +29,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import FormHelperText from "@mui/material/FormHelperText";
 import Backdrop from "@mui/material/Backdrop";
 import CircularProgress from "@mui/material/CircularProgress";
+import Grid from "@mui/material/Unstable_Grid2";
 
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -50,6 +51,9 @@ import { RssOption } from "./types";
 
 import "./index.css";
 import { PageEntity } from "@logseq/libs/dist/LSPlugin";
+import { articleStyle, Theme as CustomTheme } from "./style";
+
+const customTheme = CustomTheme.Dark;
 
 const rssList = [
   "http://www.ruanyifeng.com/blog/atom.xml",
@@ -81,9 +85,9 @@ const closedMixin = (theme: Theme): CSSObject => ({
     duration: theme.transitions.duration.leavingScreen,
   }),
   overflowX: "hidden",
-  width: `calc(${theme.spacing(7)} + 1px)`,
+  width: `calc(${theme.spacing(5)} +  1px)`,
   [theme.breakpoints.up("sm")]: {
-    width: `calc(${theme.spacing(8)} + 1px)`,
+    width: `calc(${theme.spacing(6)} + 1px)`,
   },
 });
 
@@ -258,197 +262,263 @@ function App() {
   if (visible) {
     return (
       <main className="logseq-rss-reader-plugin-main">
-        <div ref={innerRef} className="rss-reader-main">
-          <Box sx={{ display: "flex", height: "100%" }}>
-            <CssBaseline />
-            <AppBar position="fixed" open={drawerVisible}>
-              <Toolbar>
-                <IconButton
-                  color="inherit"
-                  aria-label="open drawer"
-                  onClick={() => handleDrawerToggle(true)}
-                  edge="start"
-                  sx={{
-                    marginRight: 5,
-                    ...(drawerVisible && { display: "none" }),
-                  }}
-                >
-                  <MenuIcon />
-                </IconButton>
-                <Typography
-                  variant="h6"
-                  noWrap
-                  component="div"
-                  sx={{ flexGrow: 1 }}
-                >
-                  {rssOptions.find((i) => i.feedUrl === currntRssUrl)?.title}
-                </Typography>
-                <Button
-                  color="inherit"
-                  onClick={() => handleFetchData(rssOptions[0].feedUrl)}
-                >
-                  Refresh
-                </Button>
-                <Button color="inherit" onClick={handleClose}>
-                  Close
-                </Button>
-              </Toolbar>
-            </AppBar>
-            <Drawer variant="permanent" open={drawerVisible}>
-              <DrawerHeader>
-                <IconButton onClick={() => handleDrawerToggle(false)}>
-                  {theme.direction === "rtl" ? (
-                    <ChevronRightIcon />
-                  ) : (
-                    <ChevronLeftIcon />
-                  )}
-                </IconButton>
-              </DrawerHeader>
-              <Divider />
-              <List>
-                {rssOptions.map((rss) => (
-                  <ListItem
-                    key={rss.url}
-                    disablePadding
-                    sx={{ display: "block" }}
-                    aria-selected
-                  >
-                    <Tooltip title={rss.feedUrl}>
-                      <ListItemButton
-                        selected={rss.feedUrl === currntRssUrl}
-                        onClick={() => {
-                          setCurrntRssUrl(rss.feedUrl);
-                          handleFetchData(rss.feedUrl);
-                        }}
-                      >
-                        <ListItemAvatar>
-                          <Avatar src={rss.favicons} />
-                        </ListItemAvatar>
-                        <ListItemText>{rss.title}</ListItemText>
-                      </ListItemButton>
-                    </Tooltip>
-                  </ListItem>
-                ))}
-              </List>
-              <Box
+        <Box
+          sx={{
+            height: "100vh",
+            width: "100vw",
+            display: "flex",
+            boxSizing: "border-box",
+          }}
+        >
+          <CssBaseline />
+          <AppBar position="fixed" open={drawerVisible}>
+            <Toolbar>
+              <IconButton
+                color="inherit"
+                aria-label="open drawer"
+                onClick={() => handleDrawerToggle(true)}
+                edge="start"
                 sx={{
-                  position: "absolute",
-                  bottom: 0,
-                  width: "100%",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  padding: "16px 0",
+                  marginRight: 5,
+                  ...(drawerVisible && { display: "none" }),
                 }}
               >
-                <Zoom
-                  in={drawerVisible}
-                  timeout={transitionDuration}
-                  style={{
-                    transitionDelay: `${
-                      drawerVisible ? transitionDuration.exit : 0
-                    }ms`,
-                  }}
-                  unmountOnExit
-                >
-                  <Fab
-                    aria-label="add"
-                    color="primary"
-                    onClick={() => setDialogVisible(true)}
-                  >
-                    <AddIcon />
-                  </Fab>
-                </Zoom>
-              </Box>
-            </Drawer>
-            <Box
-              component="main"
-              padding={0}
-              display="flex"
-              height="100%"
-              sx={{ flexGrow: 1 }}
+                <MenuIcon />
+              </IconButton>
+              <Typography
+                variant="h6"
+                noWrap
+                component="div"
+                sx={{ flexGrow: 1 }}
+              >
+                {rssOptions.find((i) => i.feedUrl === currntRssUrl)?.title}
+              </Typography>
+              <Button
+                color="inherit"
+                onClick={() => handleFetchData(rssOptions[0].feedUrl)}
+              >
+                Refresh
+              </Button>
+              <Button color="inherit" onClick={handleClose}>
+                Close
+              </Button>
+            </Toolbar>
+          </AppBar>
+          <Box sx={{ flex: 1, width: "100vw", display: "flex" }}>
+            <Drawer
+              variant="permanent"
+              open={drawerVisible}
+              sx={{ height: "100%" }}
             >
               <Box
-                component="div"
-                sx={{ width: 350, backgroundColor: "blanchedalmond" }}
+                sx={{
+                  height: "100%",
+                  backgroundColor: {
+                    [CustomTheme.Light]: "#ddd",
+                    [CustomTheme.Dark]: "#333",
+                  }[customTheme],
+                  color: {
+                    [CustomTheme.Light]: "#333",
+                    [CustomTheme.Dark]: "#ddd",
+                  }[customTheme],
+                }}
               >
-                <List sx={{ height: "100%", width: "100%", overflow: "auto" }}>
-                  {feedList.map((feed) => (
-                    <ListItem disablePadding key={feed.link}>
-                      <ListItemButton
-                        selected={feed.link === currentFeed?.link}
-                        onClick={() => setCurrentFeed(feed)}
-                      >
-                        <ListItemText>{feed.title}</ListItemText>
-                      </ListItemButton>
+                <DrawerHeader>
+                  <IconButton onClick={() => handleDrawerToggle(false)}>
+                    {theme.direction === "rtl" ? (
+                      <ChevronRightIcon
+                        style={{
+                          color: {
+                            [CustomTheme.Light]: "#333",
+                            [CustomTheme.Dark]: "#ddd",
+                          }[customTheme],
+                        }}
+                      />
+                    ) : (
+                      <ChevronLeftIcon
+                        style={{
+                          color: {
+                            [CustomTheme.Light]: "#333",
+                            [CustomTheme.Dark]: "#ddd",
+                          }[customTheme],
+                        }}
+                      />
+                    )}
+                  </IconButton>
+                </DrawerHeader>
+                <Divider />
+                <List>
+                  {rssOptions.map((rss) => (
+                    <ListItem
+                      key={rss.url}
+                      disablePadding
+                      sx={{ display: "block" }}
+                      aria-selected
+                    >
+                      <Tooltip TransitionComponent={Zoom} title={rss.feedUrl}>
+                        <ListItemButton
+                          selected={rss.feedUrl === currntRssUrl}
+                          onClick={() => {
+                            setCurrntRssUrl(rss.feedUrl);
+                            handleFetchData(rss.feedUrl);
+                          }}
+                        >
+                          <ListItemAvatar>
+                            <Avatar
+                              sx={{ width: "28px", height: "28px" }}
+                              src={rss.favicons}
+                            />
+                          </ListItemAvatar>
+                          <ListItemText>{rss.title}</ListItemText>
+                        </ListItemButton>
+                      </Tooltip>
                     </ListItem>
                   ))}
                 </List>
+                <Box
+                  sx={{
+                    position: "absolute",
+                    bottom: 0,
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    padding: "16px 0",
+                  }}
+                >
+                  <Zoom
+                    in={drawerVisible}
+                    timeout={transitionDuration}
+                    style={{
+                      transitionDelay: `${
+                        drawerVisible ? transitionDuration.exit : 0
+                      }ms`,
+                    }}
+                    unmountOnExit
+                  >
+                    <Fab
+                      aria-label="add"
+                      color="primary"
+                      onClick={() => setDialogVisible(true)}
+                    >
+                      <AddIcon />
+                    </Fab>
+                  </Zoom>
+                </Box>
               </Box>
-              <Box
-                component="div"
-                style={{}}
-                sx={{
-                  flex: 1,
-                  backgroundColor: "chocolate",
-                  height: "100%",
-                  overflow: "auto",
-                  py: 5,
-                  px: 3,
-                }}
-              >
-                {/* TODO: 搞一个空内容展示 */}
-                <div>{parse(currentFeed?.content || "")}</div>
-              </Box>
+            </Drawer>
+            <Box component="main" padding={0} sx={{ width: 0, flex: 1 }}>
+              <Grid container sx={{ height: "100vh", display: "flex" }}>
+                <Grid
+                  xs={3}
+                  sx={{
+                    height: "100vh",
+                    color: {
+                      [CustomTheme.Light]: "#161514",
+                      [CustomTheme.Dark]: "#f4f4f4",
+                    }[customTheme],
+                    backgroundColor: {
+                      [CustomTheme.Light]: "#faf9f8",
+                      [CustomTheme.Dark]: "#282828",
+                    }[customTheme],
+                    overflowY: "auto",
+                    paddingTop: "64px",
+                  }}
+                >
+                  <List sx={{ height: "100%", width: "100%" }}>
+                    {feedList.map((feed) => (
+                      <ListItem disablePadding key={feed.link}>
+                        <ListItemButton
+                          selected={feed.link === currentFeed?.link}
+                          onClick={() => setCurrentFeed(feed)}
+                        >
+                          <ListItemText>{feed.title}</ListItemText>
+                        </ListItemButton>
+                      </ListItem>
+                    ))}
+                  </List>
+                </Grid>
+                <Grid
+                  xs={9}
+                  sx={{
+                    ...articleStyle(customTheme),
+                    height: "100vh",
+                    margin: 0,
+                    p: 4,
+                    overflowY: "auto",
+                    paddingTop: "64px",
+                  }}
+                >
+                  <Box>
+                    <h1>{currentFeed?.title}</h1>
+                  </Box>
+                  <Box>
+                    <time>{currentFeed?.isoDate}</time>
+                  </Box>
+                  <Divider
+                    color={
+                      {
+                        [CustomTheme.Light]: "#212121",
+                        [CustomTheme.Dark]: "#efefef",
+                      }[customTheme]
+                    }
+                    sx={{ my: 1 }}
+                  />
+                  {/* TODO: 搞一个空内容展示 */}
+                  <Box>
+                    <Typography>{parse(currentFeed?.content || "")}</Typography>
+                  </Box>
+                </Grid>
+              </Grid>
             </Box>
           </Box>
-          <Dialog
-            fullWidth
-            open={dialogVisible}
-            onClose={() => setDialogVisible(false)}
-          >
-            <DialogTitle>Add RSS</DialogTitle>
-            <DialogContent>
-              <TextField
-                autoFocus
-                margin="dense"
-                id="name"
-                label="RSS URL"
-                type="email"
-                fullWidth
-                variant="standard"
-                onChange={(e) => setCurrntRssUrl(e.target.value)}
-              />
-              <FormHelperText>
-                This URL will be added to your
-                <span style={{ color: "#333", fontWeight: 700 }}>
-                  {` rss-config `}
-                </span>
-                page
-              </FormHelperText>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setDialogVisible(false)}>Cancel</Button>
-              <LoadingButton
-                disabled={!currntRssUrl}
-                loading={loading}
-                onClick={handleAddFeed}
-              >
-                Add
-              </LoadingButton>
-            </DialogActions>
-          </Dialog>
-          <Backdrop open={loading} style={{ zIndex: 9999 }}>
-            <CircularProgress color="primary" />
-          </Backdrop>
-          {messageInfo.open && (
-            <Message
-              open={messageInfo.open}
-              type={messageInfo.type}
-              value={messageInfo.value}
+        </Box>
+        <Dialog
+          fullWidth
+          open={dialogVisible}
+          onClose={() => setDialogVisible(false)}
+        >
+          <DialogTitle>Add RSS</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              id="name"
+              label="RSS URL"
+              type="email"
+              fullWidth
+              variant="standard"
+              onChange={(e) => setCurrntRssUrl(e.target.value)}
             />
-          )}
-        </div>
+            <FormHelperText>
+              This URL will be added to your
+              <span style={{ color: "#333", fontWeight: 700 }}>
+                {` rss-config `}
+              </span>
+              page
+            </FormHelperText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDialogVisible(false)}>Cancel</Button>
+            <LoadingButton
+              disabled={!currntRssUrl}
+              loading={loading}
+              onClick={handleAddFeed}
+            >
+              Add
+            </LoadingButton>
+          </DialogActions>
+        </Dialog>
+        <Backdrop open={loading} style={{ zIndex: 9999 }}>
+          <CircularProgress color="primary" />
+        </Backdrop>
+        {messageInfo.open && (
+          <Message
+            open={messageInfo.open}
+            type={messageInfo.type}
+            value={messageInfo.value}
+          />
+        )}
       </main>
     );
   }
