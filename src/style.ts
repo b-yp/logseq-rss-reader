@@ -1,9 +1,6 @@
 import { CSSObject } from "@mui/material/styles";
 
-export enum Theme {
-  Light = "light",
-  Dark = "dark",
-}
+import { LogseqTheme as Theme } from './constants'
 
 export const articleStyle = (theme: Theme): CSSObject => ({
   fontSize: '0.875rem',

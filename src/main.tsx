@@ -2,6 +2,8 @@ import "@logseq/libs";
 import React from "react";
 import * as ReactDOM from "react-dom/client";
 
+import { Experimental_CssVarsProvider as CssVarsProvider } from "@mui/material/styles";
+
 import App from "./App";
 import { logseq as PL } from "../package.json";
 
@@ -14,7 +16,9 @@ async function main() {
 
   root.render(
     <React.StrictMode>
-      <App />
+      <CssVarsProvider>
+        <App />
+      </CssVarsProvider>
     </React.StrictMode>
   );
 

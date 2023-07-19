@@ -1,9 +1,15 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Parser from "rss-parser";
 import { getLinkPreview } from "link-preview-js";
 import parse from "html-react-parser";
 
-import { styled, useTheme, Theme, CSSObject } from "@mui/material/styles";
+import {
+  styled,
+  useTheme,
+  Theme,
+  CSSObject,
+  useColorScheme,
+} from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import MuiDrawer from "@mui/material/Drawer";
 import MuiAppBar, { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
@@ -36,6 +42,10 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import MenuIcon from "@mui/icons-material/Menu";
 import Zoom from "@mui/material/Zoom";
 import AddIcon from "@mui/icons-material/Add";
+import CloseIcon from "@mui/icons-material/Close";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import LightModeIcon from "@mui/icons-material/LightMode";
 
 import LoadingButton from "@mui/lab/LoadingButton";
 
@@ -50,15 +60,15 @@ import {
 import { RssOption } from "./types";
 
 import "./index.css";
-import { PageEntity } from "@logseq/libs/dist/LSPlugin";
-import { articleStyle, Theme as CustomTheme } from "./style";
-
-const customTheme = CustomTheme.Dark;
+import { PageEntity, ThemeMode } from "@logseq/libs/dist/LSPlugin";
+import { articleStyle } from "./style";
+import { LogseqTheme } from "./constants";
 
 const rssList = [
   "http://www.ruanyifeng.com/blog/atom.xml",
   "https://www.reddit.com/.rss",
   "https://sspai.com/feed",
+  "https://xinquji.com/rss",
   "http://feed.appinn.com/",
   "https://xinquji.com/rss",
   "https://www.woshipm.com/feed",
@@ -66,9 +76,22 @@ const rssList = [
   "https://coolshell.cn/feed",
   "https://liriansu.com/index.xml",
   "https://chensy.cn/post/index.xml",
+  "http://googoo.run/rss.xml",
+  "https://www.skyue.com/feed/",
 ];
 
 const drawerWidth = 240;
+
+const getCustomColor = (logseqTheme: LogseqTheme) => ({
+  color: {
+    [LogseqTheme.Light]: "#333",
+    [LogseqTheme.Dark]: "#ddd",
+  }[logseqTheme],
+  backgroundColor: {
+    [LogseqTheme.Light]: "#ddd",
+    [LogseqTheme.Dark]: "#333",
+  }[logseqTheme],
+});
 
 const openedMixin = (theme: Theme): CSSObject => ({
   width: drawerWidth,
@@ -85,9 +108,9 @@ const closedMixin = (theme: Theme): CSSObject => ({
     duration: theme.transitions.duration.leavingScreen,
   }),
   overflowX: "hidden",
-  width: `calc(${theme.spacing(5)} +  1px)`,
+  width: `calc(${theme.spacing(6)} +  1px)`,
   [theme.breakpoints.up("sm")]: {
-    width: `calc(${theme.spacing(6)} + 1px)`,
+    width: `calc(${theme.spacing(7)} + 1px)`,
   },
 });
 
@@ -140,7 +163,7 @@ const Drawer = styled(MuiDrawer, {
 }));
 
 function App() {
-  const innerRef = useRef<HTMLDivElement>(null);
+  const { mode, setMode } = useColorScheme();
   const visible = useAppVisible();
   const theme = useTheme();
   const parser = new Parser();
@@ -161,10 +184,15 @@ function App() {
   const [configPage, setConfigPage] = useState<PageEntity | null>(null);
   const [feedList, setFeedList] = useState<Parser.Item[]>([]);
   const [currentFeed, setCurrentFeed] = useState<Parser.Item | null>(null);
+  const [logseqTheme, setLogseqTheme] = useState<LogseqTheme>(LogseqTheme.Dark);
 
   const init = async () => {
+    const { preferredThemeMode } = await logseq.App.getUserConfigs();
+    setLogseqTheme(preferredThemeMode as LogseqTheme);
+    setMode(preferredThemeMode);
     let rssConfigPage;
     rssConfigPage = await logseq.Editor.getPage("rss-config");
+
     if (!rssConfigPage) {
       rssConfigPage = await logseq.Editor.createPage(
         "rss-config",
@@ -261,7 +289,10 @@ function App() {
 
   if (visible) {
     return (
-      <main className="logseq-rss-reader-plugin-main">
+      <main
+        className="logseq-rss-reader-plugin-main"
+        style={{ colorScheme: logseqTheme }}
+      >
         <Box
           sx={{
             height: "100vh",
@@ -293,34 +324,51 @@ function App() {
               >
                 {rssOptions.find((i) => i.feedUrl === currntRssUrl)?.title}
               </Typography>
-              <Button
+              <IconButton
+                color="inherit"
+                onClick={() => {
+                  setLogseqTheme((prev) =>
+                    prev === LogseqTheme.Light
+                      ? LogseqTheme.Dark
+                      : LogseqTheme.Light
+                  );
+                  setMode(
+                    mode === LogseqTheme.Dark
+                      ? LogseqTheme.Light
+                      : LogseqTheme.Dark
+                  );
+                }}
+              >
+                {logseqTheme === LogseqTheme.Light ? (
+                  <LightModeIcon />
+                ) : (
+                  <DarkModeIcon />
+                )}
+              </IconButton>
+              <IconButton
                 color="inherit"
                 onClick={() => handleFetchData(rssOptions[0].feedUrl)}
               >
-                Refresh
-              </Button>
-              <Button color="inherit" onClick={handleClose}>
-                Close
-              </Button>
+                <RefreshIcon />
+              </IconButton>
+              <IconButton color="inherit" onClick={handleClose}>
+                <CloseIcon />
+              </IconButton>
             </Toolbar>
           </AppBar>
           <Box sx={{ flex: 1, width: "100vw", display: "flex" }}>
             <Drawer
               variant="permanent"
               open={drawerVisible}
-              sx={{ height: "100%" }}
+              sx={{
+                height: "100%",
+                backgroundColor: getCustomColor(logseqTheme).backgroundColor,
+              }}
             >
               <Box
                 sx={{
+                  ...getCustomColor(logseqTheme),
                   height: "100%",
-                  backgroundColor: {
-                    [CustomTheme.Light]: "#ddd",
-                    [CustomTheme.Dark]: "#333",
-                  }[customTheme],
-                  color: {
-                    [CustomTheme.Light]: "#333",
-                    [CustomTheme.Dark]: "#ddd",
-                  }[customTheme],
                 }}
               >
                 <DrawerHeader>
@@ -328,19 +376,13 @@ function App() {
                     {theme.direction === "rtl" ? (
                       <ChevronRightIcon
                         style={{
-                          color: {
-                            [CustomTheme.Light]: "#333",
-                            [CustomTheme.Dark]: "#ddd",
-                          }[customTheme],
+                          color: getCustomColor(logseqTheme).color,
                         }}
                       />
                     ) : (
                       <ChevronLeftIcon
                         style={{
-                          color: {
-                            [CustomTheme.Light]: "#333",
-                            [CustomTheme.Dark]: "#ddd",
-                          }[customTheme],
+                          color: getCustomColor(logseqTheme).color,
                         }}
                       />
                     )}
@@ -399,6 +441,7 @@ function App() {
                     <Fab
                       aria-label="add"
                       color="primary"
+                      size="small"
                       onClick={() => setDialogVisible(true)}
                     >
                       <AddIcon />
@@ -412,20 +455,24 @@ function App() {
                 <Grid
                   xs={3}
                   sx={{
-                    height: "100vh",
                     color: {
-                      [CustomTheme.Light]: "#161514",
-                      [CustomTheme.Dark]: "#f4f4f4",
-                    }[customTheme],
+                      [LogseqTheme.Light]: "#161514",
+                      [LogseqTheme.Dark]: "#f4f4f4",
+                    }[logseqTheme],
                     backgroundColor: {
-                      [CustomTheme.Light]: "#faf9f8",
-                      [CustomTheme.Dark]: "#282828",
-                    }[customTheme],
-                    overflowY: "auto",
-                    paddingTop: "64px",
+                      [LogseqTheme.Light]: "#faf9f8",
+                      [LogseqTheme.Dark]: "#282828",
+                    }[logseqTheme],
                   }}
                 >
-                  <List sx={{ height: "100%", width: "100%" }}>
+                  <List
+                    sx={{
+                      width: "100%",
+                      height: "calc(100vh - 64px)",
+                      marginTop: "64px",
+                      overflowY: "auto",
+                    }}
+                  >
                     {feedList.map((feed) => (
                       <ListItem disablePadding key={feed.link}>
                         <ListItemButton
@@ -441,7 +488,7 @@ function App() {
                 <Grid
                   xs={9}
                   sx={{
-                    ...articleStyle(customTheme),
+                    ...articleStyle(logseqTheme),
                     height: "100vh",
                     margin: 0,
                     p: 4,
@@ -456,12 +503,7 @@ function App() {
                     <time>{currentFeed?.isoDate}</time>
                   </Box>
                   <Divider
-                    color={
-                      {
-                        [CustomTheme.Light]: "#212121",
-                        [CustomTheme.Dark]: "#efefef",
-                      }[customTheme]
-                    }
+                    color={getCustomColor(logseqTheme).color}
                     sx={{ my: 1 }}
                   />
                   {/* TODO: 搞一个空内容展示 */}
@@ -492,7 +534,12 @@ function App() {
             />
             <FormHelperText>
               This URL will be added to your
-              <span style={{ color: "#333", fontWeight: 700 }}>
+              <span
+                style={{
+                  color: getCustomColor(logseqTheme).color,
+                  fontWeight: 700,
+                }}
+              >
                 {` rss-config `}
               </span>
               page
