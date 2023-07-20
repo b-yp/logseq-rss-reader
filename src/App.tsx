@@ -1,3 +1,4 @@
+import { PageEntity } from "@logseq/libs/dist/LSPlugin";
 import React, { useEffect, useState } from "react";
 import Parser from "rss-parser";
 import { getLinkPreview } from "link-preview-js";
@@ -46,6 +47,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import LightModeIcon from "@mui/icons-material/LightMode";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 import LoadingButton from "@mui/lab/LoadingButton";
 
@@ -58,11 +60,10 @@ import {
   useAppVisible,
 } from "./utils";
 import { RssOption } from "./types";
+import { LogseqTheme } from "./constants";
 
 import "./index.css";
-import { PageEntity, ThemeMode } from "@logseq/libs/dist/LSPlugin";
 import { articleStyle } from "./style";
-import { LogseqTheme } from "./constants";
 
 const rssList = [
   "http://www.ruanyifeng.com/blog/atom.xml",
@@ -162,6 +163,31 @@ const Drawer = styled(MuiDrawer, {
   }),
 }));
 
+const ConfirmDialog = ({
+  open,
+  onClose,
+  onConfirm,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) => {
+  return (
+    <Dialog open={open} onClose={onClose}>
+      <DialogTitle>Confirm Action</DialogTitle>
+      <DialogContent>Are you sure you want to delete?</DialogContent>
+      <DialogActions>
+        <Button onClick={onClose} color="primary">
+          Cancel
+        </Button>
+        <Button onClick={onConfirm} color="primary">
+          Confirm
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
 function App() {
   const { mode, setMode } = useColorScheme();
   const visible = useAppVisible();
@@ -170,7 +196,7 @@ function App() {
   const [rssOptions, setRssOptions] = useState<RssOption[]>([]);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [dialogVisible, setDialogVisible] = useState(false);
-  const [currntRssUrl, setCurrntRssUrl] = useState("");
+  const [currentRssUrl, setCurrentRssUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [messageInfo, setMessageInfo] = useState<{
     open: boolean;
@@ -185,6 +211,8 @@ function App() {
   const [feedList, setFeedList] = useState<Parser.Item[]>([]);
   const [currentFeed, setCurrentFeed] = useState<Parser.Item | null>(null);
   const [logseqTheme, setLogseqTheme] = useState<LogseqTheme>(LogseqTheme.Dark);
+  const [currntItemIndex, setCurrntItemIndex] = useState<number | null>(null);
+  const [isDelete, setIsDelete] = useState(false);
 
   const init = async () => {
     const { preferredThemeMode } = await logseq.App.getUserConfigs();
@@ -220,9 +248,8 @@ function App() {
 
   useEffect(() => {
     if (rssOptions.length > 0) {
-      const feedUrl = rssOptions[0].feedUrl;
+      const feedUrl = currentRssUrl || rssOptions[0].feedUrl;
       handleFetchData(feedUrl);
-      setCurrntRssUrl(feedUrl);
     }
   }, [rssOptions]);
 
@@ -233,6 +260,7 @@ function App() {
   }, [feedList]);
 
   const handleFetchData = async (url: string) => {
+    setCurrentRssUrl(url);
     setLoading(true);
     const res = await fetch(url, {
       method: "GET",
@@ -255,12 +283,12 @@ function App() {
   const handleAddFeed = async () => {
     setLoading(true);
     try {
-      const baseUrl = extractBaseURL(currntRssUrl);
+      const baseUrl = extractBaseURL(currentRssUrl);
       if (!baseUrl) return;
       const result = await getLinkPreview(baseUrl);
       if (result.url) {
         if (!configPage) return;
-        await logseq.Editor.appendBlockInPage(configPage.uuid, currntRssUrl, {
+        await logseq.Editor.appendBlockInPage(configPage.uuid, currentRssUrl, {
           properties: formatObject(result),
         });
         setMessageInfo({
@@ -276,6 +304,20 @@ function App() {
       setMessageInfo({ open: true, type: "error", value: e?.message || e });
       setLoading(false);
     }
+  };
+
+  const handleDelete = async (feedurl: string) => {
+    if (!configPage?.uuid) return;
+    const tree = await logseq.Editor.getPageBlocksTree(configPage?.uuid);
+    const block = tree.find((i) => i.content.startsWith(feedurl));
+    if (!block?.uuid) return;
+    logseq.Editor.removeBlock(block?.uuid);
+
+    const currentRssOptions = rssOptions.filter((i) => i.feedUrl !== feedurl);
+    if (!currentRssOptions.length) return;
+    setCurrentRssUrl(rssOptions[(currntItemIndex || 1) - 1].feedUrl);
+    setRssOptions(currentRssOptions);
+    setIsDelete(false);
   };
 
   const handleClose = () => {
@@ -322,7 +364,7 @@ function App() {
                 component="div"
                 sx={{ flexGrow: 1 }}
               >
-                {rssOptions.find((i) => i.feedUrl === currntRssUrl)?.title}
+                {rssOptions.find((i) => i.feedUrl === currentRssUrl)?.title}
               </Typography>
               <IconButton
                 color="inherit"
@@ -347,7 +389,9 @@ function App() {
               </IconButton>
               <IconButton
                 color="inherit"
-                onClick={() => handleFetchData(rssOptions[0].feedUrl)}
+                onClick={() =>
+                  handleFetchData(currentRssUrl || rssOptions[0].feedUrl)
+                }
               >
                 <RefreshIcon />
               </IconButton>
@@ -390,33 +434,57 @@ function App() {
                 </DrawerHeader>
                 <Divider />
                 <List>
-                  {rssOptions.map((rss) => (
+                  {rssOptions.map((rss, index) => (
                     <ListItem
                       key={rss.url}
                       disablePadding
                       sx={{ display: "block" }}
                       aria-selected
+                      onMouseEnter={() => setCurrntItemIndex(index)}
+                      onMouseLeave={() => setCurrntItemIndex(null)}
                     >
-                      <Tooltip TransitionComponent={Zoom} title={rss.feedUrl}>
-                        <ListItemButton
-                          selected={rss.feedUrl === currntRssUrl}
-                          onClick={() => {
-                            setCurrntRssUrl(rss.feedUrl);
-                            handleFetchData(rss.feedUrl);
+                      {/* <Tooltip TransitionComponent={Zoom} title={rss.feedUrl}> */}
+                      <ListItemButton
+                        selected={rss.feedUrl === currentRssUrl}
+                        onClick={() => {
+                          handleFetchData(rss.feedUrl);
+                        }}
+                      >
+                        <ListItemAvatar>
+                          <Avatar
+                            sx={{ width: "28px", height: "28px" }}
+                            src={rss.favicons}
+                          />
+                        </ListItemAvatar>
+                        <ListItemText
+                          sx={{
+                            overflow: "hidden",
                           }}
                         >
-                          <ListItemAvatar>
-                            <Avatar
-                              sx={{ width: "28px", height: "28px" }}
-                              src={rss.favicons}
-                            />
-                          </ListItemAvatar>
-                          <ListItemText>{rss.title}</ListItemText>
-                        </ListItemButton>
-                      </Tooltip>
+                          {rss.title}
+                        </ListItemText>
+                        {currntItemIndex === index && (
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCurrentRssUrl(rss.feedUrl);
+                              setIsDelete(true);
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        )}
+                      </ListItemButton>
+                      {/* </Tooltip> */}
                     </ListItem>
                   ))}
                 </List>
+                <ConfirmDialog
+                  open={isDelete}
+                  onClose={() => setIsDelete(false)}
+                  onConfirm={() => handleDelete(currentRssUrl)}
+                />
                 <Box
                   sx={{
                     position: "absolute",
@@ -530,7 +598,7 @@ function App() {
               type="email"
               fullWidth
               variant="standard"
-              onChange={(e) => setCurrntRssUrl(e.target.value)}
+              onChange={(e) => setCurrentRssUrl(e.target.value)}
             />
             <FormHelperText>
               This URL will be added to your
@@ -548,7 +616,7 @@ function App() {
           <DialogActions>
             <Button onClick={() => setDialogVisible(false)}>Cancel</Button>
             <LoadingButton
-              disabled={!currntRssUrl}
+              disabled={!currentRssUrl}
               loading={loading}
               onClick={handleAddFeed}
             >
