@@ -7,29 +7,20 @@ interface MessageProps {
   open: boolean;
   type: AlertColor;
   value: string;
+  onClose: () => void;
 }
 
-const Message: React.FC<MessageProps> = ({ type, value, open }) => {
-  const [showMessage, setShowMessage] = React.useState(false);
-
-  useEffect(() => {
-    if (open) {
-      setShowMessage(open);
-    }
-  }, [open]);
+const Message: React.FC<MessageProps> = ({ type, value, open, onClose }) => {
+  useEffect(() => () => onClose(), []);
 
   return (
     <Snackbar
-      open={showMessage}
+      open={open}
       anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      autoHideDuration={6000}
-      onClose={() => setShowMessage(false)}
+      autoHideDuration={3000}
+      onClose={onClose}
     >
-      <Alert
-        onClose={() => setShowMessage(false)}
-        severity={type}
-        sx={{ width: "100%" }}
-      >
+      <Alert onClose={onClose} severity={type} sx={{ width: "100%" }}>
         {value}
       </Alert>
     </Snackbar>

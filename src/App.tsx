@@ -262,18 +262,27 @@ function App() {
   const handleFetchData = async (url: string) => {
     setCurrentRssUrl(url);
     setLoading(true);
-    const res = await fetch(url, {
-      method: "GET",
-      mode: "cors",
-    }).then((res) => {
-      return res.text();
-    });
-    if (!res) return;
-    const feed = await parser.parseString(res);
-    console.log("feed", feed);
-    const items = feed.items;
-    setFeedList(items);
-    setLoading(false);
+    try {
+      const res = await fetch(url, {
+        method: "GET",
+        mode: "cors",
+      }).then((res) => {
+        return res.text();
+      });
+      if (!res) return;
+      const feed = await parser.parseString(res);
+      console.log("feed", feed);
+      const items = feed.items;
+      setFeedList(items);
+      setLoading(false);
+    } catch (e: any) {
+      setMessageInfo({
+        open: true,
+        type: "error",
+        value: e?.message || e || "未知错误",
+      });
+      setLoading(false);
+    }
   };
 
   const handleDrawerToggle = (visible: boolean) => {
@@ -284,7 +293,15 @@ function App() {
     setLoading(true);
     try {
       const baseUrl = extractBaseURL(currentRssUrl);
-      if (!baseUrl) return;
+      if (!baseUrl) {
+        setLoading(false);
+        setMessageInfo({
+          open: true,
+          type: "warning",
+          value: "Invalid URL",
+        });
+        return;
+      }
       const result = await getLinkPreview(baseUrl);
       if (result.url) {
         if (!configPage) return;
@@ -627,13 +644,17 @@ function App() {
         <Backdrop open={loading} style={{ zIndex: 9999 }}>
           <CircularProgress color="primary" />
         </Backdrop>
-        {messageInfo.open && (
-          <Message
-            open={messageInfo.open}
-            type={messageInfo.type}
-            value={messageInfo.value}
-          />
-        )}
+        <Message
+          open={messageInfo.open}
+          type={messageInfo.type}
+          value={messageInfo.value}
+          onClose={() =>
+            setMessageInfo({
+              ...messageInfo,
+              open: false,
+            })
+          }
+        />
       </main>
     );
   }
