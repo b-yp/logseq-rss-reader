@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import Parser from "rss-parser";
 import { getLinkPreview } from "link-preview-js";
 import parse from "html-react-parser";
+import TurndownService from "turndown";
 
 import {
   styled,
@@ -48,6 +49,8 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import DeleteIcon from "@mui/icons-material/Delete";
+import SaveAltIcon from "@mui/icons-material/SaveAlt";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 
 import LoadingButton from "@mui/lab/LoadingButton";
 
@@ -193,6 +196,13 @@ function App() {
   const visible = useAppVisible();
   const theme = useTheme();
   const parser = new Parser();
+  const turndownService = new TurndownService({
+    headingStyle: "atx",
+    hr: "---",
+    bulletListMarker: "-",
+    codeBlockStyle: "fenced",
+    linkStyle: "inlined",
+  });
   const [rssOptions, setRssOptions] = useState<RssOption[]>([]);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [dialogVisible, setDialogVisible] = useState(false);
@@ -202,6 +212,7 @@ function App() {
     open: boolean;
     type: "success" | "info" | "warning" | "error";
     value: string;
+    autoHideDuration?: number | null;
   }>({
     open: false,
     type: "success",
@@ -213,6 +224,8 @@ function App() {
   const [logseqTheme, setLogseqTheme] = useState<LogseqTheme>(LogseqTheme.Dark);
   const [currntItemIndex, setCurrntItemIndex] = useState<number | null>(null);
   const [isDelete, setIsDelete] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [allPages, setAllPages] = useState<PageEntity[]>([]);
 
   const init = async () => {
     const { preferredThemeMode } = await logseq.App.getUserConfigs();
@@ -240,6 +253,8 @@ function App() {
       }));
 
     setRssOptions(options as unknown as RssOption[]);
+    const allPages = await logseq.Editor.getAllPages();
+    setAllPages(allPages || []);
   };
 
   useEffect(() => {
@@ -337,6 +352,39 @@ function App() {
     setIsDelete(false);
   };
 
+  const handleSaveAsPage = async () => {
+    setSaveLoading(true);
+    if (!currentFeed) return;
+    const page = await logseq.Editor.createPage(
+      currentFeed.title || `未知页面-${new Date()}`,
+      {
+        "pub-date": currentFeed.pubDate,
+        link: currentFeed.link,
+      },
+      {
+        createFirstBlock: false,
+        format: "markdown",
+        journal: false,
+      }
+    );
+
+    const markdown = turndownService.turndown(currentFeed.content || "");
+    if (!page?.uuid || !markdown) return;
+    const markdownList = markdown.split("\n").filter((i) => !!i);
+    markdownList.forEach(async (i) => {
+      await logseq.Editor.appendBlockInPage(page.uuid, i);
+    });
+    const allPages = await logseq.Editor.getAllPages();
+    setAllPages(allPages || []);
+    setMessageInfo({
+      open: true,
+      type: "success",
+      value: "Saved successfully",
+      autoHideDuration: null,
+    });
+    setSaveLoading(false);
+  };
+
   const handleClose = () => {
     logseq.hideMainUI();
   };
@@ -384,6 +432,7 @@ function App() {
                 {rssOptions.find((i) => i.feedUrl === currentRssUrl)?.title}
               </Typography>
               <IconButton
+                title="Toggle theme"
                 color="inherit"
                 onClick={() => {
                   setLogseqTheme((prev) =>
@@ -404,7 +453,25 @@ function App() {
                   <DarkModeIcon />
                 )}
               </IconButton>
+              <IconButton title="Save to page" color="inherit">
+                {currentFeed?.title &&
+                allPages.map((i) => i.name).includes(currentFeed.title) ? (
+                  <CheckCircleOutlineIcon />
+                ) : (
+                  <SaveAltIcon onClick={handleSaveAsPage} />
+                )}
+                {saveLoading && (
+                  <CircularProgress
+                    size={30}
+                    sx={{
+                      position: "absolute",
+                      zIndex: 1,
+                    }}
+                  />
+                )}
+              </IconButton>
               <IconButton
+                title="Refresh"
                 color="inherit"
                 onClick={() =>
                   handleFetchData(currentRssUrl || rssOptions[0].feedUrl)
@@ -412,7 +479,7 @@ function App() {
               >
                 <RefreshIcon />
               </IconButton>
-              <IconButton color="inherit" onClick={handleClose}>
+              <IconButton title="Close" color="inherit" onClick={handleClose}>
                 <CloseIcon />
               </IconButton>
             </Toolbar>
