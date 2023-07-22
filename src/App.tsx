@@ -667,7 +667,24 @@ function App() {
                     {/* TODO: 搞一个空内容展示 */}
                     <Box>
                       <Typography>
-                        {parse(currentFeed?.content || "")}
+                        {parse(currentFeed?.content || "", {
+                          replace: (domNode: any) => {
+                            if (
+                              domNode.type === "tag" &&
+                              domNode.name === "a"
+                            ) {
+                              return (
+                                <a
+                                  target="_blank"
+                                  href={domNode.attribs.href}
+                                  rel="noreferrer"
+                                >
+                                  {domNode.children[0].data}
+                                </a>
+                              );
+                            }
+                          },
+                        })}
                       </Typography>
                     </Box>
                   </Box>
