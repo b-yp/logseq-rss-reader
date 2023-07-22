@@ -1,5 +1,5 @@
 import { PageEntity } from "@logseq/libs/dist/LSPlugin";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Parser from "rss-parser";
 import { getLinkPreview } from "link-preview-js";
 import parse from "html-react-parser";
@@ -195,6 +195,7 @@ function App() {
   const { mode, setMode } = useColorScheme();
   const visible = useAppVisible();
   const theme = useTheme();
+  const articleRef = useRef<Element>(null);
   const parser = new Parser();
   const turndownService = new TurndownService({
     headingStyle: "atx",
@@ -629,7 +630,11 @@ function App() {
                       <ListItem disablePadding key={feed.link}>
                         <ListItemButton
                           selected={feed.link === currentFeed?.link}
-                          onClick={() => setCurrentFeed(feed)}
+                          onClick={() => {
+                            setCurrentFeed(feed);
+                            if (!articleRef.current) return;
+                            articleRef.current.scrollTop = 0;
+                          }}
                         >
                           <ListItemText>{feed.title}</ListItemText>
                         </ListItemButton>
@@ -637,30 +642,34 @@ function App() {
                     ))}
                   </List>
                 </Grid>
-                <Grid
-                  xs={9}
-                  sx={{
-                    ...articleStyle(logseqTheme),
-                    height: "100vh",
-                    margin: 0,
-                    p: 4,
-                    overflowY: "auto",
-                    paddingTop: "64px",
-                  }}
-                >
-                  <Box>
-                    <h1>{currentFeed?.title}</h1>
-                  </Box>
-                  <Box>
-                    <time>{currentFeed?.isoDate}</time>
-                  </Box>
-                  <Divider
-                    color={getCustomColor(logseqTheme).color}
-                    sx={{ my: 1 }}
-                  />
-                  {/* TODO: 搞一个空内容展示 */}
-                  <Box>
-                    <Typography>{parse(currentFeed?.content || "")}</Typography>
+                <Grid xs={9}>
+                  <Box
+                    sx={{
+                      ...articleStyle(logseqTheme),
+                      height: "100vh",
+                      margin: 0,
+                      p: 4,
+                      overflowY: "auto",
+                      paddingTop: "64px",
+                    }}
+                    ref={articleRef}
+                  >
+                    <Box>
+                      <h1>{currentFeed?.title}</h1>
+                    </Box>
+                    <Box>
+                      <time>{currentFeed?.isoDate}</time>
+                    </Box>
+                    <Divider
+                      color={getCustomColor(logseqTheme).color}
+                      sx={{ my: 1 }}
+                    />
+                    {/* TODO: 搞一个空内容展示 */}
+                    <Box>
+                      <Typography>
+                        {parse(currentFeed?.content || "")}
+                      </Typography>
+                    </Box>
                   </Box>
                 </Grid>
               </Grid>
