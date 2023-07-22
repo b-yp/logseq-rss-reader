@@ -1,0 +1,21 @@
+[English](./README.md) | 中文
+
+- # loseq-rss-reader
+  - 在 Logseq 中阅读 RSS 内容并导入至 Logseq
+- ## 功能
+  - 添加 RSS 订阅源
+  - 删除 RSS 订阅源
+  - 文章列表
+  - 文章阅读
+  - 页面主题（支持浅色主题和深色主题）
+  - 保存文章至 Logseq
+- ## 演示
+  - ![](./assets/logseq-rss-reader-demo.gif)
+  - [](./assets/logseq-rss-reader-demo.mp4)
+- ## 鸣谢
+  - ### [link-preview-js](https://github.com/ospfranco/link-preview-js)
+  - ### [rss-parser](https://github.com/rbren/rss-parser)
+  - ### [html-react-parser](https://github.com/remarkablemark/html-react-parser)
+  - ### [turndown](https://github.com/mixmark-io/turndown)
+- ## 许可证
+  - [MIT](https://choosealicense.com/licenses/mit/)

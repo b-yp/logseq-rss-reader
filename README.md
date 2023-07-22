@@ -1,7 +1,21 @@
-- # loseq-base-plugin
-	- logseq 插件
-- ## 功能
-- ## 待办
-- ## 演示
-- ## 鸣谢
-- ## 许可证
+[中文](./README_CN.md) | English
+
+- # loseq-rss-reader
+  - Read and import RSS content into Logseq.
+- ## Features
+  - Add RSS feed sources.
+  - Remove RSS feed sources.
+  - Article list.
+  - Article reading.
+  - Page themes (support light and dark themes).
+  - Save articles to Logseq.
+- ## Demo
+  - ![](./assets/logseq-rss-reader-demo.gif)
+  - [](./assets/logseq-rss-reader-demo.mp4)
+- ## Thanks
+  - ### [link-preview-js](https://github.com/ospfranco/link-preview-js)
+  - ### [rss-parser](https://github.com/rbren/rss-parser)
+  - ### [html-react-parser](https://github.com/remarkablemark/html-react-parser)
+  - ### [turndown](https://github.com/mixmark-io/turndown)
+- ## License
+  - [MIT](https://choosealicense.com/licenses/mit/)

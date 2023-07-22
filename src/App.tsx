@@ -70,17 +70,17 @@ import { articleStyle } from "./style";
 
 const rssList = [
   "http://www.ruanyifeng.com/blog/atom.xml",
+  "https://liriansu.com/index.xml",
+  "https://www.woshipm.com/feed",
+  "https://chensy.cn/post/index.xml",
+  "http://googoo.run/rss.xml",
   "https://www.reddit.com/.rss",
   "https://sspai.com/feed",
   "https://xinquji.com/rss",
   "http://feed.appinn.com/",
   "https://xinquji.com/rss",
-  "https://www.woshipm.com/feed",
   "https://www.zhangxinxu.com/wordpress/feed/",
   "https://coolshell.cn/feed",
-  "https://liriansu.com/index.xml",
-  "https://chensy.cn/post/index.xml",
-  "http://googoo.run/rss.xml",
   "https://www.skyue.com/feed/",
 ];
 
