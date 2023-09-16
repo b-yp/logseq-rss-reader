@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/b-yp/logseq-rss-reader/compare/v1.0.0...v1.0.1) (2023-09-16)
+
+
+### Bug Fixes
+
+* Fix page stuck ([90229e5](https://github.com/b-yp/logseq-rss-reader/commit/90229e51802abb489dd28e0f0ca029cca78ab9e0))
+
 # 1.0.0 (2023-07-22)
 
 
