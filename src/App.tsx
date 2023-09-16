@@ -412,7 +412,7 @@ function App() {
           <CssBaseline />
           <AppBar position="fixed" open={drawerVisible}>
             <Toolbar>
-              <IconButton
+              {/* <IconButton
                 color="inherit"
                 aria-label="open drawer"
                 onClick={() => handleDrawerToggle(true)}
@@ -423,12 +423,12 @@ function App() {
                 }}
               >
                 <MenuIcon />
-              </IconButton>
+              </IconButton> */}
               <Typography
                 variant="h6"
                 noWrap
                 component="div"
-                sx={{ flexGrow: 1 }}
+                sx={{ flexGrow: 1, paddingLeft: drawerVisible ? 0 : "60px" }}
               >
                 {rssOptions.find((i) => i.feedUrl === currentRssUrl)?.title}
               </Typography>
@@ -500,16 +500,19 @@ function App() {
                   height: "100%",
                 }}
               >
-                <DrawerHeader>
-                  <IconButton onClick={() => handleDrawerToggle(false)}>
-                    {theme.direction === "rtl" ? (
-                      <ChevronRightIcon
+                <DrawerHeader sx={{ paddingTop: "64px" }}>
+                  <IconButton
+                    sx={{ margin: "10px auto" }}
+                    onClick={() => handleDrawerToggle(!drawerVisible)}
+                  >
+                    {drawerVisible ? (
+                      <ChevronLeftIcon
                         style={{
                           color: getCustomColor(logseqTheme).color,
                         }}
                       />
                     ) : (
-                      <ChevronLeftIcon
+                      <ChevronRightIcon
                         style={{
                           color: getCustomColor(logseqTheme).color,
                         }}
@@ -679,7 +682,8 @@ function App() {
                                   href={domNode.attribs.href}
                                   rel="noreferrer"
                                 >
-                                  {domNode.children[0].data}
+                                  {domNode.children[0]?.data ||
+                                    domNode.attribs.href}
                                 </a>
                               );
                             }
