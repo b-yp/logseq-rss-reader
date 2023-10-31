@@ -661,7 +661,19 @@ function App() {
                       <h1>{currentFeed?.title}</h1>
                     </Box>
                     <Box>
-                      <time>{currentFeed?.isoDate}</time>
+                      <time>
+                        {new Date(currentFeed?.isoDate ?? "").toLocaleString(
+                          "default",
+                          {
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric",
+                            hour: "numeric",
+                            minute: "numeric",
+                            second: "numeric",
+                          }
+                        )}
+                      </time>
                     </Box>
                     <Divider
                       color={getCustomColor(logseqTheme).color}
