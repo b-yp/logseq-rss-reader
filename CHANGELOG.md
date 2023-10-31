@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/b-yp/logseq-rss-reader/compare/v1.0.1...v1.1.0) (2023-10-31)
+
+
+### Features
+
+* format date ([470eb4c](https://github.com/b-yp/logseq-rss-reader/commit/470eb4cd5c97fcd5d3210202d46342dfa9cb892f))
+
 ## [1.0.1](https://github.com/b-yp/logseq-rss-reader/compare/v1.0.0...v1.0.1) (2023-09-16)
 
 
